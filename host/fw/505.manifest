@@ -1,0 +1,23 @@
+CACHE MANIFEST 
+
+CACHE: 
+includes/img.jpg
+../logo.png
+includes/style.css
+payload.bin
+payloads/disableupdates.bin
+payloads/gtava1.bin
+payloads/gtava2.bin
+payloads/gtava3.bin
+payloads/gtavl.bin
+payloads/gtavbq132.bin
+payloads/gtavbq133.bin
+payloads/Lamance9.bin
+payloads/Oysters1.13.bin
+payloads/Oysters1.19.bin
+payloads/Oysters1.24.bin
+index.html
+505/exploit.js
+
+NETWORK: 
+* 

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" manifest="cache.appcache">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Loopayeh</title>
+<style>
+:root{--bg:#101014;--card:#1b1d24;--txt:#f1f3f8;--mut:#9aa3b5;--acc:#4f8ef7;--ok:#7fd0a0;--bad:#e17b7b;--warn:#e3c878}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:radial-gradient(1400px 700px at 50% -10%,#232b3a 0%,var(--bg) 65%);color:var(--txt);font:20px/1.7 system-ui,"Segoe UI",sans-serif;min-height:100vh;display:flex;justify-content:center;align-items:center;padding:24px 16px}
+.wrap{width:100%;max-width:560px}
+.card{background:var(--card);border:1px solid #2c2f3a;border-radius:20px;padding:30px 28px;text-align:center}
+.top{display:flex;align-items:center;gap:14px;text-align:left}
+.top img{width:60px;height:60px;border-radius:50%;flex:none}
+.top b{font-size:23px;letter-spacing:.12em}
+.top small{display:block;color:var(--mut);font-size:13px;margin-top:2px}
+#fw{margin-left:auto;flex:none;text-align:center;background:#24262e;border-radius:12px;padding:8px 14px;font-size:14px;color:var(--mut)}
+#fw b{display:block;font-size:19px;color:var(--acc)}
+#msgs{font-size:34px;font-weight:800;margin:26px 0 6px;min-height:56px}
+#msgs.ok{color:var(--ok)}#msgs.bad{color:var(--bad)}#msgs.warn{color:var(--warn)}
+.warnbox{font-size:16px;background:rgba(0,0,0,.3);border:1px solid #3a3d48;padding:12px 16px;margin:16px 0 0;border-radius:12px;text-align:left;color:var(--txt)}
+.warnbox ul{text-align:left;list-style-position:inside;padding:0}
+.warnbox li{margin:6px 0}
+.warnbox b.t{font-size:19px;color:var(--warn)}
+.foot{color:var(--mut);font-size:13px;margin-top:14px;text-align:center}
+#out,#state{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="top">
+      <img src="logo.png" alt="">
+      <div><b>LOOPAYEH</b><small>Jailbreak Host &middot; 5.05 to 13.52</small></div>
+      <div id="fw">firmware<b id="fwv">...</b></div>
+    </div>
+    <div id="msgs">Jailbreaking... please wait</div>
+    <div class="warnbox">
+      <b class="t">Important</b>
+      <ul>
+        <li>If you get an error, do not retry right away; just restart the console and try again.</li>
+        <li>This jailbreak needs no flash drive on firmwares 5.05 to 13.52.</li>
+        <li>GoldHEN loads automatically after a few seconds.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot">Loopayeh Jailbreak Host &middot; <a href="payloads.html" style="color:var(--acc)">Payloads</a> &middot; <span id="cache"></span></div>
+</div>
+
+<script>
+(function () {
+  var msgs = document.getElementById("msgs");
+  var fwv = document.getElementById("fwv");
+  function setMsg(t, c) { msgs.textContent = t; msgs.className = c || ""; }
+
+  var ua = navigator.userAgent;
+  var m = ua.match(/PlayStation 4[ \/]([\d.]+)/i);
+  var fwVersion = m ? m[1] : "Unknown";
+  var fwNum = parseFloat(fwVersion);
+  fwv.textContent = fwVersion;
+
+  function onScriptError() {
+    setMsg("Cache not found; please clear browser data and open the host again", "bad");
+  }
+
+  if (!m) {
+    setMsg("Only for PS4 consoles on firmware 5.05 to 13.52", "bad");
+    return;
+  }
+
+  // Offline files live under fw/ with their own manifests. Each cache page
+  // stores a flag in localStorage when done, so we never bounce back to it.
+  var ACKEY = null, cachePage = null;
+  if (fwNum === 5.05 || fwNum === 5.07) { ACKEY = "cached_505"; cachePage = "fw/cache505.html"; }
+  else if (fwNum >= 6.70 && fwNum <= 8.52) { ACKEY = "cached_700"; cachePage = "fw/cache700.html"; }
+  else if (fwNum >= 9.00 && fwNum <= 9.60) { ACKEY = "cached_900"; cachePage = "fw/cache900.html"; }
+  else if (fwNum >= 10.00 && fwNum <= 11.02) { ACKEY = "cached_css"; cachePage = "fw/cachecss.html"; }
+  else if (fwNum >= 11.50 && fwNum <= 13.52) { ACKEY = "cached_slopkit"; cachePage = "fw/cacheslopkit.html"; }
+  else { setMsg("Unsupported Firmware: " + fwVersion, "bad"); return; }
+  var offlineReady = false;
+  try { offlineReady = !!localStorage[ACKEY]; } catch (e) {}
+  if (!offlineReady) { location.replace(cachePage); return; }
+
+  // Root manifest (this page + payloads page) caches in the background.
+  // Stay here until it says "offline ready" before disconnecting.
+  (function rootCache() {
+    var el = document.getElementById("cache");
+    var c = window.applicationCache;
+    if (!c || !document.documentElement.hasAttribute("manifest")) return;
+    function note(t) { el.textContent = t; }
+    if (!navigator.onLine) { note("offline mode"); return; }
+    if (c.status === c.IDLE) { note("offline ready"); return; }
+    if (c.status === c.UPDATEREADY) { note("update ready - reload once"); return; }
+    note("saving offline files...");
+    c.addEventListener("cached", function () { note("offline ready"); }, false);
+    c.addEventListener("noupdate", function () { note("offline ready"); }, false);
+    c.addEventListener("updateready", function () { note("update ready - reload once"); }, false);
+    c.addEventListener("error", function () { note("offline unavailable"); }, false);
+  })();
+
+  function load(src, type, cb) {
+    setMsg("Starting jailbreak for " + fwVersion + "...", "warn");
+    var s = document.createElement("script");
+    if (type) s.type = type;
+    s.src = src;
+    s.onerror = onScriptError;
+    if (cb) s.onload = cb;
+    document.head.appendChild(s);
+  }
+
+  if (fwNum === 5.05 || fwNum === 5.07) {
+    load("fw/505/exploit.js");
+  } else if (fwNum >= 6.70 && fwNum <= 6.72) {
+    load("fw/672/672entrypoint.js", null, function () {
+      load("fw/672/main.js", null, function () {
+        setTimeout(function () { if (typeof doJailBreak === "function") doJailBreak(); }, 500);
+      });
+    });
+  } else if (fwNum >= 7.00 && fwNum <= 8.52) {
+    load("fw/700/alert.js", "module");
+  } else if (fwNum >= 9.00 && fwNum <= 9.60) {
+    load("fw/900/alert.js", "module");
+  } else if (fwNum >= 10.00 && fwNum <= 11.02) {
+    load("fw/css/main.js", null, function () {
+      setTimeout(function () { if (typeof doJb === "function") doJb(); }, 500);
+    });
+  } else if (fwNum >= 11.50 && fwNum <= 12.02) {
+    load("fw/slopkit/chain_lapse.js", "module");
+  } else if (fwNum >= 12.50 && fwNum <= 13.00) {
+    load("fw/slopkit/chain_poops.js", "module");
+  } else if (fwNum >= 13.02 && fwNum <= 13.52) {
+    load("fw/slopkit/jb.js", "module");
+  } else {
+    setMsg("Unsupported Firmware: " + fwVersion, "bad");
+  }
+})();
+</script>
+</body>
+</html>

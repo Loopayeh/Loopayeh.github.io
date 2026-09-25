@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" manifest="505.manifest">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script>history.replaceState(null,null,'cache505.html');</script>
+<title>Loopayeh</title>
+<style>
+:root{--bg:#101014;--card:#1b1d24;--txt:#f1f3f8;--mut:#9aa3b5;--acc:#4f8ef7;--ok:#7fd0a0;--bad:#e17b7b;--warn:#e3c878}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:radial-gradient(1400px 700px at 50% -10%,#232b3a 0%,var(--bg) 65%);color:var(--txt);font:20px/1.7 system-ui,"Segoe UI",sans-serif;min-height:100vh;display:flex;justify-content:center;align-items:center;padding:24px 16px}
+.wrap{width:100%;max-width:520px}
+.card{background:var(--card);border:1px solid #2c2f3a;border-radius:20px;padding:26px 28px;text-align:center}
+.top{display:flex;align-items:center;gap:14px;text-align:left}
+.top img{width:60px;height:60px;border-radius:50%;flex:none}
+.top b{font-size:23px;letter-spacing:.12em}
+.top small{display:block;color:var(--mut);font-size:13px;margin-top:2px}
+#fw{margin-left:auto;flex:none;text-align:center;background:#24262e;border-radius:12px;padding:8px 14px;font-size:14px;color:var(--mut)}
+#fw b{display:block;font-size:19px;color:var(--acc)}
+#pct{font-size:64px;font-weight:800;margin:18px 0 2px}
+#bar{height:14px;background:#24262e;border-radius:8px;margin:14px 0 6px;overflow:hidden}
+#bar i{display:block;height:100%;width:0%;border-radius:8px;background:linear-gradient(90deg,var(--acc),#b693f1)}
+#progress{font-size:22px;font-weight:700;margin-top:10px;min-height:36px}
+#progress.ok{color:var(--ok)}#progress.bad{color:var(--bad)}
+.foot{color:var(--mut);font-size:13px;margin-top:14px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="top">
+      <img src="../logo.png" alt="">
+      <div><b>LOOPAYEH</b><small>Offline setup &middot; first run only</small></div>
+      <div id="fw">firmware<b>5.05 - 5.07</b></div>
+    </div>
+    <div id="pct">0%</div>
+    <div id="bar"><i id="fill"></i></div>
+    <div id="progress">Preparing offline files...</div>
+  </div>
+  <div class="foot">Loopayeh Jailbreak Host &middot; after this you can disconnect the internet</div>
+</div>
+<script>
+(function () {
+  var CKEY = "cached_505";
+  var SELF = "cache505.html";
+  var pct = document.getElementById("pct");
+  var fill = document.getElementById("fill");
+  var msg = document.getElementById("progress");
+  function setMsg(t, c) { msg.textContent = t; msg.className = c || ""; }
+  function setPct(p) {
+    p = Math.max(0, Math.min(100, p));
+    pct.textContent = p + "%";
+    fill.style.width = p + "%";
+  }
+  function flag() { try { localStorage.is755BCached = true; localStorage[CKEY] = 1; } catch (e) {} }
+  function errCount() {
+    var n = 0;
+    try { n = parseInt(localStorage["err_" + CKEY] || "0", 10) + 1; localStorage["err_" + CKEY] = n; }
+    catch (e) { n = 1; }
+    return n;
+  }
+  var ac = window.applicationCache;
+  if (!ac) { setMsg("Browser cache not supported", "bad"); return; }
+  if (ac.status === 2) { flag(); }
+  ac.ondownloading = function () { setMsg("Downloading offline files..."); };
+  ac.onprogress = function (a) {
+    if (a && a.total) setPct(Math.round((a.loaded / a.total) * 100));
+    setMsg("Downloading offline files...");
+  };
+  ac.oncached = function () {
+    setPct(100); setMsg("Saved for offline use", "ok"); flag();
+    location.replace("../index.html");
+  };
+  ac.onupdateready = function () {
+    try { ac.swapCache(); } catch (e) {}
+    setPct(100); setMsg("Offline files updated", "ok"); flag();
+    location.replace("../index.html");
+  };
+  ac.onnoupdate = function () { flag(); location.replace("../index.html"); };
+  ac.onerror = function () {
+    if (errCount() >= 3) setMsg("Cache failed, please clear browser data and retry", "bad");
+    else location.replace(SELF);
+  };
+})();
+</script>
+</body>
+</html>
